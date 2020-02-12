@@ -1,34 +1,69 @@
 {
-  "name": "opl-manager",
-  "version": "0.1.0",
-  "private": true,
-  "dependencies": {
-    "@testing-library/jest-dom": "^4.2.4",
-    "@testing-library/react": "^9.4.0",
-    "@testing-library/user-event": "^7.2.1",
-    "react": "^16.12.0",
-    "react-dom": "^16.12.0",
-    "react-scripts": "3.3.1"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": "react-app"
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  }
+    "name": "opl-manager",
+    "description": "Open PS2 Loader (OPL) manager",
+    "version": "0.1.0",
+    "private": true,
+    "author": {
+        "name": "David Serrano",
+        "email": "david.ma.serrano@gmail.com",
+        "url": "https://dserrano.duckdns.org"
+    },
+    "build": {
+        "appId": "org.duckdns.dserrano.opl-manager",
+        "productName": "Open PS2 Loader (OPL) manager",
+        "copyright": "Copyright (C) 2020 ${author}",
+        "files": [
+            "build/**/*",
+            "node_modules/**/*"
+        ],
+        "directories": {
+            "buildResources": "assets"
+        }
+    },
+    "dependencies": {
+        "@testing-library/jest-dom": "^4.2.4",
+        "@testing-library/react": "^9.4.0",
+        "@testing-library/user-event": "^7.2.1",
+        "electron-is-dev": "^1.1.0",
+        "react": "^16.12.0",
+        "react-dom": "^16.12.0",
+        "react-scripts": "3.3.1"
+    },
+    "scripts": {
+        "start": "rescripts start",
+        "build": "rescripts build",
+        "test": "rescripts test",
+        "eject": "rescripts eject",
+        "electron-dev": "concurrently \"BROWSER=none npm run start\" \"wait-on http://localhost:3000 && electron .\"",
+        "postinstall": "electron-builder install-app-deps",
+        "preelectron-pack": "npm run build",
+        "electron-pack-mac": "electron-builder -m",
+        "electron-pack-win": "electron-builder -w",
+        "electron-pack-linux": "electron-builder -l"
+    },
+    "main": "public/electron.js",
+    "homepage": "./",
+    "eslintConfig": {
+        "extends": "react-app"
+    },
+    "browserslist": {
+        "production": [
+            ">0.2%",
+            "not dead",
+            "not op_mini all"
+        ],
+        "development": [
+            "last 1 chrome version",
+            "last 1 firefox version",
+            "last 1 safari version"
+        ]
+    },
+    "devDependencies": {
+        "@rescripts/cli": "0.0.13",
+        "@rescripts/rescript-env": "0.0.11",
+        "concurrently": "^5.1.0",
+        "electron": "^8.0.0",
+        "electron-builder": "^22.3.2",
+        "wait-on": "^4.0.0"
+    }
 }

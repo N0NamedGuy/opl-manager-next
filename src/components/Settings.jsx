@@ -33,7 +33,12 @@ const Settings = () => {
                     <Form onSubmit={handleSubmit}>
                         <FormGroup>
                             <FormLabel>OPL root</FormLabel>
-                            <FileSelect name="oplRoot" />
+                            <FileSelect name="oplRoot" 
+                                options={{
+                                    properties: [
+                                        "openDirectory"
+                                    ]
+                                }} />
                         </FormGroup>
 
                         <FormGroup>

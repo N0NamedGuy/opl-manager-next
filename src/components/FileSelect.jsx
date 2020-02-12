@@ -6,15 +6,13 @@ import { Button } from 'react-bootstrap';
 import { InputGroup } from 'react-bootstrap';
 import { FormControl } from 'react-bootstrap';
 
-const FileSelect = (props) => 
-    <Field {...props}>{
-        ({field, form, meta}) => {
+const FileSelect = ({ options, ...otherProps }) =>
+    <Field {...otherProps}>{
+        ({ field, form, meta }) => {
 
             function selectFile() {
-                remote.dialog.showOpenDialog({
-                    properties: ["openFile"]
-                })
-                    .then(({filePaths, canceled}) => {
+                remote.dialog.showOpenDialog(options)
+                    .then(({ filePaths, canceled }) => {
                         if (!canceled) {
                             form.setFieldValue(field.name, filePaths[0]);
                         }
@@ -29,6 +27,6 @@ const FileSelect = (props) =>
             </InputGroup>
         }
     }</Field>
-;
+    ;
 
 export default FileSelect;

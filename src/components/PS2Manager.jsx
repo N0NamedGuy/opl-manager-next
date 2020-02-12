@@ -1,15 +1,10 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { Container, Card, Button } from 'react-bootstrap';
-
+import { extract7z } from 'es-7z';
 import { readdir, readFile } from 'fs';
 import path from 'path';
-
-import AppSettingsContext from '../contexts/AppSettingsContext.jsx';
-
-import { extract7z } from 'es-7z';
-
+import React, { useContext, useEffect, useState } from 'react';
+import { Button, Card, Container } from 'react-bootstrap';
 import tmp from 'tmp';
-import kvParser from 'key-value-parser';
+import AppSettingsContext from '../contexts/AppSettingsContext.jsx';
 
 const PS2Manager = () => {
     const AppSettings = useContext(AppSettingsContext);

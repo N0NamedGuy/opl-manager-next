@@ -1,26 +1,32 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+
+import { BrowserRouter as Router } from 'react-router-dom';
+import { Route, Switch } from 'react-router';
+
+import 'bootstrap/dist/css/bootstrap.min.css';
+
+import Navigation from './components/Navigation.jsx';
+import POPSManager from './components/POPSManager';
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    return (
+        <Router>
+            <div>
+                <Navigation />
+                <Switch>
+                    <Route path="/ps2iso">
+                        <h1>Playstation 2 ISO manager</h1>
+                    </Route>
+
+                    <Route path="/psxcdr" component={POPSManager} />
+
+                    <Route path="/">
+                        Welcome to the OPL manager!
+                    </Route>
+                </Switch>
+            </div>
+        </Router>
+    );
 }
 
 export default App;

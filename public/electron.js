@@ -8,7 +8,11 @@ const isDev = require('electron-is-dev');
 let mainWindow;
 
 function createWindow() {
-    mainWindow = new BrowserWindow({ width: 900, height: 680 });
+    mainWindow = new BrowserWindow({
+        width: 900, height: 680, webPreferences: {
+            nodeIntegration: true
+        }
+    });
     mainWindow.loadURL(isDev ? 'http://localhost:3000' : `file://${path.join(__dirname, '../build/index.html')}`);
     if (isDev) {
         // Open the DevTools.
@@ -17,8 +21,25 @@ function createWindow() {
     }
     mainWindow.on('closed', () => mainWindow = null);
 }
+const installExtensions = async () => {
+    const installer = require('electron-devtools-installer')
+    const forceDownload = !!process.env.UPGRADE_EXTENSIONS
+    const extensions = [
+        'REACT_DEVELOPER_TOOLS'
+    ]
 
-app.on('ready', createWindow);
+    return Promise
+        .all(extensions.map(name => installer.default(installer[name], forceDownload)))
+        .catch(console.log);
+}
+
+app.on('ready', async () => {
+    if (isDev && process.argv.indexOf('--noDevServer') === -1) {
+        await installExtensions();
+    }
+    createWindow();
+
+});
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {

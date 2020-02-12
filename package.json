@@ -25,6 +25,8 @@
         "@testing-library/react": "^9.4.0",
         "@testing-library/user-event": "^7.2.1",
         "electron-is-dev": "^1.1.0",
+        "node-7z": "^2.0.5",
+        "node-gyp": "^6.1.0",
         "react": "^16.12.0",
         "react-dom": "^16.12.0",
         "react-scripts": "3.3.1"
@@ -59,6 +61,7 @@
         ]
     },
     "devDependencies": {
+        "7zip-bin": "^5.0.3",
         "@rescripts/cli": "0.0.13",
         "@rescripts/rescript-env": "0.0.11",
         "bootstrap": "^4.4.1",
@@ -66,11 +69,16 @@
         "electron": "^8.0.0",
         "electron-builder": "^22.3.2",
         "electron-devtools-installer": "^2.2.4",
+        "electron-settings": "^3.2.0",
+        "es-7z": "^0.4.7",
         "formik": "^2.1.4",
+        "nan": "^2.14.0",
+        "node-addon-api": "^2.0.0",
         "react-bootstrap": "^1.0.0-beta.16",
         "react-router": "^5.1.2",
         "react-router-bootstrap": "^0.25.0",
         "react-router-dom": "^5.1.2",
+        "tmp": "^0.1.0",
         "wait-on": "^4.0.0"
     }
 }

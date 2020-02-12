@@ -1,38 +1,59 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Card } from 'react-bootstrap';
+import React, { useState, useEffect, useContext } from 'react';
+import { Container, Card, Button } from 'react-bootstrap';
+import { remote } from 'electron';
 
 import { readdir } from 'fs';
 import path from 'path';
+import tmp from 'tmp';
+
+import AppSettingsContext from '../contexts/AppSettingsContext.jsx';
 
 const POPSManager = () => {
-    const [rootPath, setRootPath] = useState('/run/user/1000/gvfs/smb-share:server=192.168.1.60,share=ps2smb');
-    const [fileList, setFileList] = useState(['a']);
+    const AppSettings = useContext(AppSettingsContext);
+
+    const [fileList, setFileList] = useState([]);
 
     useEffect(() => {
-        readdir(rootPath, (err, files) => {
-            setFileList(files);
-            console.log('got files', files);
-        });
+        const oplRoot = AppSettings.settings && AppSettings.settings.oplRoot;
 
-    }, [rootPath]);
+        if (oplRoot) {
+            readdir(path.resolve(oplRoot, 'POPS'), (err, files) => {
+                if (!err) {
+                    setFileList(files);
+                } else {
+                    console.error('No POPS folder!');
+                }
+            });
+        }
+    });
 
-    function navigateTo(file) {
-        setRootPath((rootPath) => {
-            return path.resolve(rootPath, file);
-        })
+    function addBinCue() {
+        const oplRoot = AppSettings.settings && AppSettings.settings.oplRoot;
+
+        if (oplRoot) {
+            const popsPath = path.resolve(oplRoot, 'POPS');
+
+            remote.dialog.showOpenDialog({
+                properties: ["openFile"]
+            }).then((file) => {
+                tmp.dir((error, tmpDir, removeCb) => {
+                    const tempVcd = path.resolve(tmpDir, 'temp.vcd');
+                    //
+                    removeCb();
+                });
+            });
+        }
     }
 
     return (<Container>
-        <Card>
-            <Card.Body>
-                <Card.Title onClick={() => navigateTo('..')}>[..]</Card.Title>
-            </Card.Body>
-        </Card>
+        <Button onClick={() => addBinCue()}>
+            Add new BIN/CUE
+        </Button>
         {
             fileList.map((file, i) => {
                 return (<Card key={i}>
                     <Card.Body>
-                        <Card.Title onClick={() => navigateTo(file)}>{file}</Card.Title>
+                        <Card.Title>{file}</Card.Title>
                     </Card.Body>
                 </Card>);
             })

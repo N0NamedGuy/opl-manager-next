@@ -5,6 +5,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { Button, Card, Container } from 'react-bootstrap';
 import AppSettingsContext from '../contexts/AppSettingsContext.jsx';
 import { addPsxBackup } from '../utils';
+import ErrorDiplay from './ErrorDiplay.jsx';
 
 const POPSManager = () => {
     const AppSettings = useContext(AppSettingsContext);
@@ -12,6 +13,7 @@ const POPSManager = () => {
     const { oplRoot, cue2popsBin } = AppSettings.settings;
 
     const [fileList, setFileList] = useState([]);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         const popsDirPath = path.resolve(oplRoot, 'POPS');
@@ -30,6 +32,14 @@ const POPSManager = () => {
                     }));
                 } else {
                     console.error('No POPS folder!');
+                    setError({
+                        description: 'No POPS folder',
+                        cta: {
+                            description: 'Make sure there is a POPS directory on the OPL root directory',
+                            label: 'Go to settings',
+                            route: '/settings'
+                        }
+                    })
                 }
             });
         }
@@ -65,13 +75,13 @@ const POPSManager = () => {
         <Button onClick={() => addNewBackup()}>
             Add new backup
         </Button>
-        {
+        {error ? <ErrorDiplay error={error} /> :
             fileList.map((file, i) => {
                 return (<Card key={i}>
                     <Card.Body>
                         <strong>{file.title}</strong>
                         <small className="float-right">{file.gameId}</small>
-                        <br/>
+                        <br />
                         <small className="text-muted">{file.fullPath}</small>
                     </Card.Body>
                 </Card>);

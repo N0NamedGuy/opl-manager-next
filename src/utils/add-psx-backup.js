@@ -36,24 +36,26 @@ async function addPsxBackup(cuePath, progressCb) {
         // Get a game ID, because it need it for renaming reasons
         const gameId = await getPSXGameId(cuePath)
 
-        const vcdName = `${gameId}.${gameTitle}`;
-        const vcdFileName = `${vcdName}.VCD`;
+        const nameWithGameId = `${gameId}.${gameTitle}`;
+        const popsPath = path.resolve(oplRoot, 'POPS');
+
+        // Copy POPSTARTER.ELF with the naming format as
+        // the VCD file
+        const fullElfPath = path.resolve(popsPath, `${nameWithGameId}.ELF`);
+        const popstartPath = path.resolve(popsPath, 'POPSTARTER.ELF');
+        await copyFile(popstartPath, fullElfPath);
+
+        const vcdFileName = `${nameWithGameId}.VCD`;
 
         // Do some the cue to pops (CUE/BIN to VCD) convertion
         const vcdPath = path.resolve(tmpDir, vcdFileName);
         await cue2pops(cuePath, vcdPath)
 
         // Copy the VCD file into the OPL root
-        const popsPath = path.resolve(oplRoot, 'POPS');
         const vcdPathInPops = path.resolve(popsPath, vcdFileName);
         await copyFile(vcdPath, vcdPathInPops)
             .progress(progressCb || (() => {}));
 
-        // And copy POPSTARTER.ELF with the naming format as
-        // the VCD file
-        const elfPathInPops = path.resolve(popsPath, `${vcdName}.ELF`);
-        const popstartPath = path.resolve(popsPath, 'POPSTARTER.ELF');
-        await copyFile(popstartPath, elfPathInPops);
         return {
             title: gameTitle,
             fullPath: vcdPathInPops,

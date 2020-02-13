@@ -10,6 +10,11 @@ const UploadManager = ({ children }) => {
     function addPsxGames(filePaths) {
         return new Promise((resolve, reject) => {
             const promises = filePaths.map(async (cuePath) => {
+                const alredyInQueue = psxQueue.find((q) => q.fullPath === cuePath);
+                if (alredyInQueue) {
+                    return null;
+                }
+
                 const uploadingGame = {
                     fullPath: cuePath,
                     progress: {
@@ -28,16 +33,24 @@ const UploadManager = ({ children }) => {
                     });
                 });
 
+                // remove from the upload queue
+                setPsxQueue((queue) => {
+                    const newQ = [...queue];
+                    const index = newQ.findIndex(g => g.fullPath === game.fullPath);
+                    newQ.slice(index, 1);
+                    return newQ;
+                })
+
                 return game;
             });
 
             Promise.all(promises)
-                .then(resolve)
+                .then((games) => resolve(games.filter(g => !!g)))
                 .catch(reject);
         });
     }
 
-    return <UploadManagerContext.Provider value={{psxQueue, addPsxGames}}>
+    return <UploadManagerContext.Provider value={{ psxQueue, addPsxGames }}>
 
         {psxQueue.length > 0 && <ListGroup>{
             psxQueue.map((game, i) => {

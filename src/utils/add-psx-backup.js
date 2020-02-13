@@ -18,9 +18,9 @@ async function addPsxBackup(cuePath, progressCb) {
     }
 
     try {
-        const cueName = path.parse(cuePath).name;
+        const gameTitle = path.parse(cuePath).name;
 
-        if (cueName.length > 32) {
+        if (gameTitle.length > 32) {
             throw new Error('long-name');
         }
 
@@ -36,7 +36,7 @@ async function addPsxBackup(cuePath, progressCb) {
         // Get a game ID, because it need it for renaming reasons
         const gameId = await getPSXGameId(cuePath)
 
-        const vcdName = `${gameId}.${cueName}`;
+        const vcdName = `${gameId}.${gameTitle}`;
         const vcdFileName = `${vcdName}.VCD`;
 
         // Do some the cue to pops (CUE/BIN to VCD) convertion
@@ -54,6 +54,11 @@ async function addPsxBackup(cuePath, progressCb) {
         const elfPathInPops = path.resolve(popsPath, `${vcdName}.ELF`);
         const popstartPath = path.resolve(popsPath, 'POPSTARTER.ELF');
         await copyFile(popstartPath, elfPathInPops);
+        return {
+            title: gameTitle,
+            fullPath: vcdPathInPops,
+            gameId
+        };
 
     } catch (err) {
         throw err;

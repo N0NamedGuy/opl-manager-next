@@ -2,10 +2,11 @@ import { remote } from 'electron';
 import { readdir } from 'fs';
 import path from 'path';
 import React, { useContext, useEffect, useState } from 'react';
-import { Button, Container, ListGroup, ListGroupItem } from 'react-bootstrap';
+import { Button, Container } from 'react-bootstrap';
 import AppSettingsContext from '../contexts/AppSettingsContext.jsx';
 import { addPsxBackup, deleteFile } from '../utils';
 import ErrorDiplay from './ErrorDiplay.jsx';
+import GameList from './GameList.jsx';
 
 const POPSManager = () => {
     const AppSettings = useContext(AppSettingsContext);
@@ -63,8 +64,12 @@ const POPSManager = () => {
 
         const cuePath = filePaths[0];
         try {
-            await addPsxBackup(cuePath, (stats) => {
+            const game = await addPsxBackup(cuePath, (stats) => {
                 console.log(stats);
+            });
+            setGameList((gameList) => {
+                gameList.push(game);
+                return [...gameList];
             });
         } catch (e) {
             console.error('Error happend', e);
@@ -73,7 +78,7 @@ const POPSManager = () => {
 
     function deleteBackup(game) {
         const popsDirPath = path.dirname(game.fullPath);
-        const elfPath = path.resolve(popsDirPath,`${game.gameId}.${game.title}.ELF`);
+        const elfPath = path.resolve(popsDirPath, `${game.gameId}.${game.title}.ELF`);
 
         Promise.all([
             deleteFile(game.fullPath),
@@ -93,29 +98,18 @@ const POPSManager = () => {
     }
 
     return (<Container>
+
+        {error && <ErrorDiplay error={error} />}
+
         <Button onClick={() => addNewBackup()}>
             Add new backup
         </Button>
-        {error ? <ErrorDiplay error={error} /> :
-            <ListGroup>
-                {gameList.map((game, i) => {
-                    return (<ListGroupItem key={i}>
-                        <div className="d-flex">
-                            <span className="flex-grow">
-                                <small><tt>[{game.gameId}]</tt></small> &nbsp;
-                                <strong>{game.title}</strong>
-                                <br />
-                                <small className="text-muted">{game.fullPath}</small>
-                            </span>
-                            <span>
-                                <Button variant="danger"
-                                    onClick={() => {deleteBackup(game)}}>Delete</Button>
-                            </span>
-                        </div>
-                    </ListGroupItem>);
-                })}
-            </ListGroup>
-        }
+
+        <br/>
+        <br/>
+
+        <GameList gameList={gameList}
+            onDelete={deleteBackup} />
     </Container>);
 }
 

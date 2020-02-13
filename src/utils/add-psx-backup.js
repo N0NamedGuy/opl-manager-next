@@ -1,22 +1,27 @@
 import path from 'path';
 import tmp from 'tmp-promise';
+import settings from 'electron-settings';
+
+
 import getPSXGameId from './get-psx-game-id.js';
 import cue2pops from './cue2pops.js';
 import copyFile from './copy-file.js';
 
-async function addPsxBackup(cuePath, {oplRoot }) {
+async function addPsxBackup(cuePath, progressCb) {
     // Holder for temporary files removal fn
     // even if stuff went wrong
     let tmpRemoveCb;
 
+    const oplRoot = settings.get('oplRoot');
+    if (!oplRoot) {
+        throw new Error('no-opl-root')
+    }
+
     try {
         const cueName = path.parse(cuePath).name;
 
-        // TODO: make sure cuePath game name is LESS than 32 chars 
-        // and prompt the user for another name
-        // For now we just quit
         if (cueName.length > 32) {
-            throw new Error('Cue filename is too long');
+            throw new Error('long-name');
         }
 
         // Create a tmp dir so we can do convertions
@@ -42,9 +47,7 @@ async function addPsxBackup(cuePath, {oplRoot }) {
         const popsPath = path.resolve(oplRoot, 'POPS');
         const vcdPathInPops = path.resolve(popsPath, vcdFileName);
         await copyFile(vcdPath, vcdPathInPops)
-            .progress((stats) => {
-                console.log(`[${stats.percent}] ${stats.copied}/${stats.size}`);
-            });
+            .progress(progressCb || (() => {}));
 
         // And copy POPSTARTER.ELF with the naming format as
         // the VCD file
@@ -53,7 +56,7 @@ async function addPsxBackup(cuePath, {oplRoot }) {
         await copyFile(popstartPath, elfPathInPops);
 
     } catch (err) {
-        console.error('Error uploading backup', err);
+        throw err;
     } finally {
         if (tmpRemoveCb) {
             tmpRemoveCb();

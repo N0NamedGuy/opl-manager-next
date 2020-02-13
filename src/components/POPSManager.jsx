@@ -42,10 +42,13 @@ const POPSManager = () => {
         }
 
         const cuePath = filePaths[0];
-        addPsxBackup(cuePath, {
-            oplRoot,
-            cue2popsBin
-        });
+        try {
+            await addPsxBackup(cuePath, (stats) => {
+                console.log(stats);
+            });
+        } catch (e) {
+            console.error('Error happend', e);
+        }
     }
 
     return (<Container>

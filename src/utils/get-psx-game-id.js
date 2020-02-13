@@ -10,6 +10,7 @@ function getPsxGameId(cueFile) {
         );
 
         const stream = createReadStream(pathResolve(dirname(cueFile), binFile.name), {
+            // These are the address where the PSX game id resides withing the BIN file
             start: 0x9340,
             end: 0x935f
         });

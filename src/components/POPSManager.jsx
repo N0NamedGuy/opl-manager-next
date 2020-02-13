@@ -2,9 +2,9 @@ import { remote } from 'electron';
 import { readdir } from 'fs';
 import path from 'path';
 import React, { useContext, useEffect, useState } from 'react';
-import { Button, Card, Container } from 'react-bootstrap';
+import { Button, Container, ListGroup, ListGroupItem } from 'react-bootstrap';
 import AppSettingsContext from '../contexts/AppSettingsContext.jsx';
-import { addPsxBackup } from '../utils';
+import { addPsxBackup, deleteFile } from '../utils';
 import ErrorDiplay from './ErrorDiplay.jsx';
 
 const POPSManager = () => {
@@ -12,7 +12,7 @@ const POPSManager = () => {
 
     const { oplRoot, cue2popsBin } = AppSettings.settings;
 
-    const [fileList, setFileList] = useState([]);
+    const [gameList, setGameList] = useState([]);
     const [error, setError] = useState(null);
 
     useEffect(() => {
@@ -20,7 +20,7 @@ const POPSManager = () => {
         if (oplRoot) {
             readdir(popsDirPath, (err, files) => {
                 if (!err) {
-                    setFileList(files.filter((file) =>
+                    setGameList(files.filter((file) =>
                         file.endsWith('.VCD')
                     ).map((file) => {
                         const match = file.match(/(?<gameId>.{4}_\d{3}.\d{2})\.(?<title>.*)\.VCD/);
@@ -71,21 +71,50 @@ const POPSManager = () => {
         }
     }
 
+    function deleteBackup(game) {
+        const popsDirPath = path.dirname(game.fullPath);
+        const elfPath = path.resolve(popsDirPath,`${game.gameId}.${game.title}.ELF`);
+
+        Promise.all([
+            deleteFile(game.fullPath),
+            deleteFile(elfPath)
+        ])
+            .then(() => {
+                // Find index of game
+                const index = gameList.findIndex((g) => {
+                    return g.fullPath === game.fullPath;
+                });
+
+                setGameList((gameList) => {
+                    gameList.splice(index, 1);
+                    return [...gameList];
+                });
+            });
+    }
+
     return (<Container>
         <Button onClick={() => addNewBackup()}>
             Add new backup
         </Button>
         {error ? <ErrorDiplay error={error} /> :
-            fileList.map((file, i) => {
-                return (<Card key={i}>
-                    <Card.Body>
-                        <strong>{file.title}</strong>
-                        <small className="float-right">{file.gameId}</small>
-                        <br />
-                        <small className="text-muted">{file.fullPath}</small>
-                    </Card.Body>
-                </Card>);
-            })
+            <ListGroup>
+                {gameList.map((game, i) => {
+                    return (<ListGroupItem key={i}>
+                        <div className="d-flex">
+                            <span className="flex-grow">
+                                <small><tt>[{game.gameId}]</tt></small> &nbsp;
+                                <strong>{game.title}</strong>
+                                <br />
+                                <small className="text-muted">{game.fullPath}</small>
+                            </span>
+                            <span>
+                                <Button variant="danger"
+                                    onClick={() => {deleteBackup(game)}}>Delete</Button>
+                            </span>
+                        </div>
+                    </ListGroupItem>);
+                })}
+            </ListGroup>
         }
     </Container>);
 }

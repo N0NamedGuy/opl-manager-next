@@ -2,10 +2,10 @@ import { remote } from 'electron';
 import { readdir } from 'fs';
 import path from 'path';
 import React, { useContext, useEffect, useState } from 'react';
-import { Button, Container, ListGroup, ListGroupItem, ProgressBar } from 'react-bootstrap';
+import { Button, Container } from 'react-bootstrap';
 import AppSettingsContext from '../contexts/AppSettingsContext.jsx';
 import UploadManagerContext from '../contexts/UploadManagerContext.jsx';
-import { addPsxBackup, deleteFile } from '../utils';
+import { deleteFile } from '../utils';
 import ErrorDiplay from './ErrorDiplay.jsx';
 import GameList from './GameList.jsx';
 

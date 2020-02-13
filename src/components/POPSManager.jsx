@@ -4,16 +4,17 @@ import path from 'path';
 import React, { useContext, useEffect, useState } from 'react';
 import { Button, Container, ListGroup, ListGroupItem, ProgressBar } from 'react-bootstrap';
 import AppSettingsContext from '../contexts/AppSettingsContext.jsx';
+import UploadManagerContext from '../contexts/UploadManagerContext.jsx';
 import { addPsxBackup, deleteFile } from '../utils';
 import ErrorDiplay from './ErrorDiplay.jsx';
 import GameList from './GameList.jsx';
 
 const POPSManager = () => {
     const AppSettings = useContext(AppSettingsContext);
+    const UploadManager = useContext(UploadManagerContext);
 
     const { oplRoot, cue2popsBin } = AppSettings.settings;
 
-    const [uploadQueue, setUploadQueue] = useState([]);
     const [gameList, setGameList] = useState([]);
     const [error, setError] = useState(null);
 
@@ -63,32 +64,9 @@ const POPSManager = () => {
             return;
         }
 
-        const promises = filePaths.map(async (cuePath) => {
-            const uploadingGame = {
-                fullPath: cuePath,
-                progress: {
-                    percent: 0
-                }
-            };
-
-            setUploadQueue((queue) => {
-                return [...queue, uploadingGame]
-            });
-
-            const game = await addPsxBackup(cuePath, (stats) => {
-                uploadingGame.progress = stats;
-                setUploadQueue((q) => {
-                    return [...q]
-                });
-            });
-            setGameList((gameList) => [...gameList, game]);
-
-            return game;
-        });
-
         try {
-            const uploadedGames = await Promise.all(promises);
-            return uploadedGames;
+            const games = await UploadManager.addPsxGames(filePaths);
+            setGameList((list) => list.concat(games));
         } catch (e) {
             console.error('Error while uploading games', e);
         }
@@ -123,16 +101,6 @@ const POPSManager = () => {
             Add new backup
         </Button>
 
-        {uploadQueue.length > 0 && <ListGroup>{
-            uploadQueue.map((game, i) => {
-                return <ListGroupItem key={i}>
-                    <strong>{game.fullPath}</strong>
-                    <br />
-                    <ProgressBar now={game.progress.percent}
-                        label={`${game.progress.percent} %`} />
-                </ListGroupItem>
-            })
-        }</ListGroup>}
 
         <br />
         <br />

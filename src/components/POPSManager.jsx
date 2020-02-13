@@ -44,7 +44,7 @@ const POPSManager = () => {
                 }
             });
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps    
+        // eslint-disable-next-line react-hooks/exhaustive-deps    
     }, []);
 
     async function addNewBackup() {
@@ -54,7 +54,7 @@ const POPSManager = () => {
 
         // Ask the user for the CUE file
         const { filePaths, canceled } = await remote.dialog.showOpenDialog({
-            properties: ["openFile"],
+            properties: ["openFile", "multiSelections"],
             filters: [{ extensions: ['cue'], name: 'CUE sheets' }]
         });
 
@@ -63,20 +63,18 @@ const POPSManager = () => {
             return;
         }
 
-        const cuePath = filePaths[0];
+        const promises = filePaths.map(async (cuePath) => {
+            const uploadingGame = {
+                fullPath: cuePath,
+                progress: {
+                    percent: 0
+                }
+            };
 
-        const uploadingGame = {
-            fullPath: cuePath,
-            progress: {
-                percent: 0
-            }
-        };
+            setUploadQueue((queue) => {
+                return [...queue, uploadingGame]
+            });
 
-        setUploadQueue((queue) => {
-            return [...queue, uploadingGame]
-        });
-
-        try {
             const game = await addPsxBackup(cuePath, (stats) => {
                 uploadingGame.progress = stats;
                 setUploadQueue((q) => {
@@ -84,8 +82,15 @@ const POPSManager = () => {
                 });
             });
             setGameList((gameList) => [...gameList, game]);
+
+            return game;
+        });
+
+        try {
+            const uploadedGames = await Promise.all(promises);
+            return uploadedGames;
         } catch (e) {
-            console.error('Error happend', e);
+            console.error('Error while uploading games', e);
         }
     }
 
@@ -122,15 +127,15 @@ const POPSManager = () => {
             uploadQueue.map((game, i) => {
                 return <ListGroupItem key={i}>
                     <strong>{game.fullPath}</strong>
-                    <br/>
+                    <br />
                     <ProgressBar now={game.progress.percent}
-                        label={`${game.progress.percent} %`}/>
+                        label={`${game.progress.percent} %`} />
                 </ListGroupItem>
             })
         }</ListGroup>}
 
-        <br/>
-        <br/>
+        <br />
+        <br />
 
         <GameList gameList={gameList}
             onDelete={deleteBackup} />

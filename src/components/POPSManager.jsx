@@ -2,7 +2,7 @@ import { remote } from 'electron';
 import { readdir } from 'fs';
 import path from 'path';
 import React, { useContext, useEffect, useState } from 'react';
-import { Button, Container } from 'react-bootstrap';
+import { Button, Container, ListGroup, ListGroupItem, ProgressBar } from 'react-bootstrap';
 import AppSettingsContext from '../contexts/AppSettingsContext.jsx';
 import { addPsxBackup, deleteFile } from '../utils';
 import ErrorDiplay from './ErrorDiplay.jsx';
@@ -13,6 +13,7 @@ const POPSManager = () => {
 
     const { oplRoot, cue2popsBin } = AppSettings.settings;
 
+    const [uploadQueue, setUploadQueue] = useState([]);
     const [gameList, setGameList] = useState([]);
     const [error, setError] = useState(null);
 
@@ -44,7 +45,8 @@ const POPSManager = () => {
                 }
             });
         }
-    }, [oplRoot]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps    
+    }, []);
 
     async function addNewBackup() {
         if (!(oplRoot && cue2popsBin)) {
@@ -63,14 +65,27 @@ const POPSManager = () => {
         }
 
         const cuePath = filePaths[0];
+
+        const uploadingGame = {
+            fullPath: cuePath,
+            progress: {
+                percent: 0
+            }
+        };
+
+        setUploadQueue((queue) => {
+            console.log('Update upload queue');
+            return [...queue, uploadingGame]
+        });
+
         try {
             const game = await addPsxBackup(cuePath, (stats) => {
-                console.log(stats);
+                uploadingGame.progress = stats;
+                setUploadQueue((q) => {
+                    return [...q]
+                });
             });
-            setGameList((gameList) => {
-                gameList.push(game);
-                return [...gameList];
-            });
+            setGameList((gameList) => [...gameList, game]);
         } catch (e) {
             console.error('Error happend', e);
         }
@@ -104,6 +119,17 @@ const POPSManager = () => {
         <Button onClick={() => addNewBackup()}>
             Add new backup
         </Button>
+
+        {uploadQueue.length > 0 && <ListGroup>{
+            uploadQueue.map((game, i) => {
+                return <ListGroupItem key={i}>
+                    <strong>{game.fullPath}</strong>
+                    <br/>
+                    <ProgressBar now={game.progress.percent}
+                        label={`${game.progress.percent} %`}/>
+                </ListGroupItem>
+            })
+        }</ListGroup>}
 
         <br/>
         <br/>

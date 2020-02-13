@@ -1,15 +1,11 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { Container, Card, Button } from 'react-bootstrap';
 import { remote } from 'electron';
-
 import { readdir } from 'fs';
 import path from 'path';
-import fs from 'fs';
-import tmp from 'tmp';
-
-import { exec } from 'child_process';
-
+import React, { useContext, useEffect, useState } from 'react';
+import { Button, Card, Container } from 'react-bootstrap';
+import tmp from 'tmp-promise';
 import AppSettingsContext from '../contexts/AppSettingsContext.jsx';
+import { copyFile, cue2pops } from '../utils';
 import { getPSXGameId } from '../utils/cuehelper.js';
 
 const POPSManager = () => {
@@ -31,75 +27,78 @@ const POPSManager = () => {
         }
     });
 
-    function addBinCue() {
-        if (oplRoot && cue2popsBin) {
+    async function addBinCue() {
+        if (!(oplRoot && cue2popsBin)) {
+            throw new Error('oplRoot or cue2popsBin not set');
+        }
+
+        // Holder for temporary files removal
+        // even if stuff went wrong
+        let tmpRemoveCb;
+
+        try {
+            // Figure our remote POPS folder
             const popsPath = path.resolve(oplRoot, 'POPS');
 
-            remote.dialog.showOpenDialog({
+            // Ask the user for the CUE file
+            const { filePaths, canceled } = await remote.dialog.showOpenDialog({
                 properties: ["openFile"],
                 filters: [{ extensions: ['cue'], name: 'CUE sheets' }]
-            }).then(({ filePaths, canceled }) => {
-                if (!canceled) {
-                    const cuePath = filePaths[0];
-
-                    getPSXGameId(cuePath).then((gameId) => {
-                        console.log('Got game id', gameId);
-
-                        tmp.dir((error, tmpDir, removeCb) => {
-                            const cueName = path.parse(cuePath).name;
-                            const vcdName = `${gameId}.${cueName}`;
-                            const vcdFileName = `${vcdName}.VCD`;
-                            const vcdPath = path.resolve(tmpDir, vcdFileName);
-                            const vcdPathInPops = path.resolve(popsPath, vcdFileName);
-                            const elfPathInPops = path.resolve(popsPath, `${vcdName}.ELF`);
-                            const cmd = `${cue2popsBin} "${cuePath}" "${vcdPath}"`;
-
-                            const popstartPath = path.resolve(popsPath, 'POPSTARTER.ELF');
-
-                            console.log('Executing', cmd);
-
-                            exec(cmd, (error, stdout, stderr) => {
-                                // cue2pops returns error if things go well??
-                                if (error) {
-                                    if (error.code === 1) {
-
-                                        console.log('cue2pops done', stdout);
-                                        //removeCb();
-                                        console.log('Check dir ', tmpDir);
-
-                                        fs.stat(vcdPath, (err, stat) => {
-                                            const fileSize = stat.size;
-                                            let bytesCopied = 0;
-
-                                            fs.createReadStream(vcdPath)
-                                                .on('data', (buffer) => {
-                                                    bytesCopied += buffer.length;
-
-                                                    const percentage = ((bytesCopied / fileSize) * 100).toFixed(2);
-                                                    console.log('Copied ', percentage);
-                                                })
-                                                .on('end', () => {
-                                                    console.log('finished copying', vcdPathInPops);
-                                                    fs.createReadStream(popstartPath)
-                                                        .on('end', () => {
-                                                            console.log('Game ready to be played');
-                                                            removeCb();
-                                                        })
-                                                        .pipe(fs.createWriteStream(elfPathInPops));
-                                                })
-                                                .pipe(fs.createWriteStream(vcdPathInPops));
-                                        })
-
-                                    } else {
-                                        console.error('cue2pops error', stderr);
-                                    }
-                                }
-
-                            })
-                        });
-                    });
-                }
             });
+
+            // User canceled? We quit!
+            if (canceled) {
+                throw new Error('User canceled');
+            }
+
+            const cuePath = filePaths[0];
+            const cueName = path.parse(cuePath).name;
+
+            // TODO: make sure cuePath game name is LESS than 32 chars 
+            // and prompt the user for another name
+            // For now we just quit
+            if (cueName.length > 32) {
+                throw new Error('Cue filename is too long');
+            }
+
+            // Get a game ID, because it need it for renaming reasons
+            const gameId = await getPSXGameId(cuePath)
+
+            // Create a tmp dir so we can do convertions
+            const {
+                path: tmpDir,
+                cleanup: tmpRemove
+            } = await tmp.dir({
+                unsafeCleanup: true
+            });
+            tmpRemoveCb = tmpRemove;
+
+            const vcdName = `${gameId}.${cueName}`;
+            const vcdFileName = `${vcdName}.VCD`;
+
+            // Do some the cue to pops (CUE/BIN to VCD) convertion
+            const vcdPath = path.resolve(tmpDir, vcdFileName);
+            await cue2pops(cuePath, vcdPath)
+
+            // Copy the VCD file into the OPL root
+            const vcdPathInPops = path.resolve(popsPath, vcdFileName);
+            await copyFile(vcdPath, vcdPathInPops)
+                .progress((stats) => {
+                    console.log(`[${stats.percent}] ${stats.copied}/${stats.size}`);
+                });
+
+            // And copy POPSTARTER.ELF with the naming format as
+            // the VCD file
+            const elfPathInPops = path.resolve(popsPath, `${vcdName}.ELF`);
+            const popstartPath = path.resolve(popsPath, 'POPSTARTER.ELF');
+            await copyFile(popstartPath, elfPathInPops);
+            
+        } catch (err) {
+            console.error('Error uploading backup', err);
+        } finally {
+            if (tmpRemoveCb) {
+                tmpRemoveCb();
+            }
         }
     }
 
@@ -116,7 +115,7 @@ const POPSManager = () => {
                 </Card>);
             })
         }
-    </Container>)
-};
+    </Container>);
+}
 
 export default POPSManager;

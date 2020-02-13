@@ -2,7 +2,7 @@ import { createReadStream } from 'fs';
 import { parse as cueParse } from 'cue-parser';
 import { resolve as pathResolve, dirname } from 'path';
 
-export function getPSXGameId(cueFile) {
+function getPsxGameId(cueFile) {
     return new Promise((resolve, reject) => {
         const cueSheet = cueParse(cueFile);
         const binFile = cueSheet.files.find((file) =>
@@ -32,3 +32,5 @@ export function getPSXGameId(cueFile) {
             });
     });
 }
+
+export default getPsxGameId;

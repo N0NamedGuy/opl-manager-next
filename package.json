@@ -42,7 +42,8 @@
         "electron-pack": "electron-builder -mlw",
         "electron-pack-mac": "electron-builder -m",
         "electron-pack-win": "electron-builder -w",
-        "electron-pack-linux": "electron-builder -l"
+        "electron-pack-linux": "electron-builder -l",
+        "cue2pops-build": "make -C src/native/cue2pops"
     },
     "main": "public/electron.js",
     "homepage": "./",

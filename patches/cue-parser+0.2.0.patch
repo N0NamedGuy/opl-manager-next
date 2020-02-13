@@ -1,0 +1,23 @@
+diff --git a/node_modules/cue-parser/lib/.cue.js.swp b/node_modules/cue-parser/lib/.cue.js.swp
+new file mode 100644
+index 0000000..cb72065
+Binary files /dev/null and b/node_modules/cue-parser/lib/.cue.js.swp differ
+diff --git a/node_modules/cue-parser/lib/cue.js b/node_modules/cue-parser/lib/cue.js
+index 4f34fb2..e6b89d6 100644
+--- a/node_modules/cue-parser/lib/cue.js
++++ b/node_modules/cue-parser/lib/cue.js
+@@ -38,11 +38,10 @@ function parse(filename) {
+     }
+     cuesheet.encoding = chardet.detect(fs.readFileSync(filename));
+     let encoding = cuesheet.encoding;
+-    switch (cuesheet.encoding) {
+-        case 'ISO-8859-1':
+-            encoding = 'binary';
+-            break;
++    if (cuesheet.encoding.startsWith('ISO-8859-')) {
++        encoding = 'binary';
+     }
++
+     const lines = fs.readFileSync(filename, { encoding, flag: 'r' })
+         .replace(/\r\n/, '\n').split('\n');
+     lines.forEach(line => {

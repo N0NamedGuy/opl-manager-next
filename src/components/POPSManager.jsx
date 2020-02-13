@@ -33,7 +33,6 @@ const POPSManager = () => {
                         };
                     }));
                 } else {
-                    console.error('No POPS folder!');
                     setError({
                         description: 'No POPS folder',
                         cta: {
@@ -74,7 +73,6 @@ const POPSManager = () => {
         };
 
         setUploadQueue((queue) => {
-            console.log('Update upload queue');
             return [...queue, uploadingGame]
         });
 

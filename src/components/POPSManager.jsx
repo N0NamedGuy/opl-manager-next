@@ -63,7 +63,7 @@ const POPSManager = () => {
 
     return (<Container>
         <Button onClick={() => addNewBackup()}>
-            Add new BIN/CUE
+            Add new backup
         </Button>
         {
             fileList.map((file, i) => {

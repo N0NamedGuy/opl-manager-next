@@ -14,16 +14,26 @@ const POPSManager = () => {
     const [fileList, setFileList] = useState([]);
 
     useEffect(() => {
+        const popsDirPath = path.resolve(oplRoot, 'POPS');
         if (oplRoot) {
-            readdir(path.resolve(oplRoot, 'POPS'), (err, files) => {
+            readdir(popsDirPath, (err, files) => {
                 if (!err) {
-                    setFileList(files);
+                    setFileList(files.filter((file) =>
+                        file.endsWith('.VCD')
+                    ).map((file) => {
+                        const match = file.match(/(?<gameId>.{4}_\d{3}.\d{2})\.(?<title>.*)\.VCD/);
+                        return {
+                            fullPath: path.resolve(popsDirPath, file),
+                            fileName: file,
+                            ...match.groups
+                        };
+                    }));
                 } else {
                     console.error('No POPS folder!');
                 }
             });
         }
-    });
+    }, [oplRoot]);
 
     async function addNewBackup() {
         if (!(oplRoot && cue2popsBin)) {
@@ -59,7 +69,10 @@ const POPSManager = () => {
             fileList.map((file, i) => {
                 return (<Card key={i}>
                     <Card.Body>
-                        <Card.Title>{file}</Card.Title>
+                        <strong>{file.title}</strong>
+                        <small className="float-right">{file.gameId}</small>
+                        <br/>
+                        <small className="text-muted">{file.fullPath}</small>
                     </Card.Body>
                 </Card>);
             })

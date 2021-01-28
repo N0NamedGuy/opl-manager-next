@@ -68,7 +68,7 @@
         "bootstrap": "^4.4.1",
         "concurrently": "^5.1.0",
         "cue-parser": "^0.2.0",
-        "electron": "^8.0.0",
+        "electron": "^9.4.0",
         "electron-builder": "^22.3.2",
         "electron-devtools-installer": "^2.2.4",
         "electron-prompt": "^1.5.1",
